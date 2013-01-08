@@ -68,6 +68,7 @@ plot.Roc <- function(x,
     col <- tmpCol
   }
   names(col) <- names(x$models)
+  if (missing(col))
   col <- lapply(col,function(x){def.col*x})
   
   if (missing(lty)){
@@ -99,8 +100,8 @@ plot.Roc <- function(x,
                            xlab = xlab,
                            ylab = ylab)
   
-  xaxis.DefaultArgs <- list(at=seq(0,1,.25))
-  yaxis.DefaultArgs <- list(at=seq(0,1,.25))
+  xaxis.DefaultArgs <- list(at=seq(0,1,.25),pos=0)
+  yaxis.DefaultArgs <- list(at=seq(0,1,.25),pos=0)
   smartA <- MgResolveSmartArgs(call=  list(...),
                                keys=c("plot","legend","xaxis","yaxis"),
                                ignore=c("x","add","col","lty","lwd","ylim","xlim","xlab","ylab","legend","percent","grid","box","axes","roc","type","shadow","simu","BCV","apparent","noinf","control","diag"),

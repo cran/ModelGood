@@ -1,7 +1,7 @@
-MgCheck <- function(object,model.args,model.parms,Plan,verbose=TRUE){
+MgCheck <- function(object,model.args,model.parms,SplitMethod,verbose=TRUE){
   checkF <- lapply(1:length(object),function(f){
     fit <- object[[f]]
-    if(Plan != "noinf" && is.null(fit$call))
+    if(SplitMethod != "noinf" && is.null(fit$call))
       stop(paste("model",names(object)[f],"does not have a call argument."))
     else fit$call$data <- NULL
   })

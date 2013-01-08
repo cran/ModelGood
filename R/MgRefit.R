@@ -6,6 +6,8 @@ MgRefit <- function(object,data,step,silent=FALSE,verbose=FALSE){
       warning(paste("During bootstrapping: model ",class(object)," failed in step ",step),immediate.=TRUE)
     NULL
   }
-  else
+  else{
+    refit$call$data <- NULL
     refit
+  }
 }

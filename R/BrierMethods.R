@@ -39,7 +39,7 @@ Brier.randomForest <- function(object,formula,data,...){
 Brier.list <- function(object,
                        formula,
                        data,
-                       plan="noPlan",
+                       splitMethod="noSplitMethod",
                        noinf.method=c("simulate"),
                        simulate="reeval",
                        crRatio=1,
@@ -55,6 +55,9 @@ Brier.list <- function(object,
                        ...){
 
   # }}}
+  theCall=match.call()
+  if (match("replan",names(theCall),nomatch=FALSE))
+    stop("Argument name 'replan' has been replaced by 'splitMethod'.")
   # {{{ models
   NF <- length(object) 
   if (is.null(names(object)))names(object) <- sapply(object,function(o)class(o)[1])
@@ -84,30 +87,28 @@ Brier.list <- function(object,
 
 # }}}
   # {{{ response
-  
   m <- model.frame(formula,data,na.action=na.fail)
   Y <- model.response(m)
-  
   if (is.factor(Y) && (length(levels(Y))==2) || length(unique(Y))==2) {
     Y <- factor(Y)
     Y <- as.numeric(Y==levels(Y)[2])
   }
-  N <- length(Y)
+N <- length(Y)
 
 # }}}
-  # {{{ Plan
-  Plan <- MgPlans(plan=plan,B=B,N=N,M=M,k=k)
-  B <- Plan$B
-  CrossvalIndex <- Plan$index
-  if (!keepSampleIndex) Plan$index <- NULL
-  k <- Plan$k
+  # {{{ SplitMethod
+  SplitMethod <- MgSplitMethods(splitMethod=splitMethod,B=B,N=N,M=M,k=k)
+  B <- SplitMethod$B
+  CrossvalIndex <- SplitMethod$index
+  if (!keepSampleIndex) SplitMethod$index <- NULL
+  k <- SplitMethod$k
   do.crossval <- !(is.null(CrossvalIndex))
   if (missing(keepCrossValRes)) keepCrossValRes <- do.crossval
 
 # }}}
   # {{{ checking the models for compatibility with cross-validation
   if (do.crossval){
-    cm <- MgCheck(object=object,model.args=model.args,model.parms=model.parms,Plan=Plan)
+    cm <- MgCheck(object=object,model.args=model.args,model.parms=model.parms,SplitMethod=SplitMethod)
     model.args <- cm$model.args
     model.parms <- cm$model.parms
   }
@@ -127,9 +128,9 @@ Brier.list <- function(object,
     pred <- do.call("predictStatusProb",c(list(object=fit,newdata=data),model.args[[f]]))
     AppBS <- Brier.default(object=pred,y=Y,crRatio=crRatio)
 
-# }}}
-  # {{{ No information error  
-    if (Plan$internal.name %in% c("boot632plus","noinf")){
+    # }}}
+    # {{{ No information error  
+    if (SplitMethod$internal.name %in% c("boot632plus","noinf")){
       if (noinf.method=="simulate"){
         if (verbose==TRUE)
           cat("\nSimulate no information performance\n")
@@ -140,32 +141,36 @@ Brier.list <- function(object,
           responseName <- all.vars(formula)[1]
           data.b[,responseName] <- sample(factor(Y),replace=FALSE)
           fit.b <- MgRefit(object=fit,data=data.b,step=b,silent=na.accept>0,verbose=verbose)
-          pred.b <- do.call("predictStatusProb",c(list(object=fit.b,newdata=data.b),model.args[[f]]))
-          NoInfBS <- Brier.default(object=pred.b,y=data.b[,responseName],crRatio=crRatio)
+          if (is.null(fit.b)){
+            failed <- "fit"
+            NoInfBS <- NA
+          }
+          else{
+            try2predict <- try(pred.b <- do.call("predictStatusProb",c(list(object=fit.b,newdata=data.b),model.args[[f]])),silent=TRUE)
+            if (inherits(try2predict,"try-error")==TRUE){
+              failed <- "prediction"
+              NoInfBS <- NA
+            }
+            else{
+              failed <- NA
+              NoInfBS <- Brier.default(object=pred.b,y=data.b[,responseName],crRatio=crRatio)
+            }
+          }
           NoInfBS
         })
-        
         if (verbose==TRUE) cat("\n")
 
-# }}}
-  # {{{ averaging the B noinf BS curves
+        # }}}
+        # {{{ averaging the B noinf BS curves
         NoInfBS <- mean(unlist(NoInfBSList))
       }
       else{ ## constant
-        NoInfBS <- .C("brier_noinf",
-                      bs=double(1),
-                      as.double(Y),
-                      as.double(pred),
-                      as.integer(N),
-                      NAOK=TRUE,
-                      PACKAGE="ModelGood")$bs
+        NoInfBS <- .C("brier_noinf",bs=double(1),as.double(Y),as.double(pred),as.integer(N),NAOK=TRUE,PACKAGE="ModelGood")$bs
       }
     }
-    if (Plan$internal.name %in% c("boot632plus","bootcv","boot632")){
-
-# }}}
-  # {{{ Bootcv aka BootstrapCrossValidation
-
+    if (SplitMethod$internal.name %in% c("boot632plus","bootcv","boot632")){
+      # }}}
+      # {{{ Bootcv aka BootstrapCrossValidation
       if (verbose==TRUE)
         cat("\nBootstrap cross-validation performance\n")
       compute.BootcvBSList <- lapply(1:B,function(b){
@@ -178,7 +183,7 @@ Brier.list <- function(object,
         else fit.parms <- NULL
         if (is.null(fit.b)){
           failed <- "fit"
-          innerBootcvBS <- rep(NA)
+          innerBootcvBS <- NA
         }
         else{
           try2predict <- try(pred.b <- do.call("predictStatusProb",c(list(object=fit.b,newdata=val.b),model.args[[f]])),silent=na.accept>0)
@@ -204,37 +209,28 @@ Brier.list <- function(object,
       BCVBS <- mean(unlist(BootcvBSList))
     }
 
-# }}}
+  # }}}
   # {{{ Bootstrap .632
     
-    if (Plan$internal.name=="boot632"){
+    if (SplitMethod$internal.name=="boot632"){
       B632BS <- .368 * AppBS + .632 * BCVBS
     }
 
     # }}}
-    # {{{ Bootstrap .632+
-    if (Plan$internal.name=="boot632plus"){
+  # {{{ Bootstrap .632+
+    if (SplitMethod$internal.name=="boot632plus"){
       R632PlusBS <- MgFormule632(App=AppBS,BCV=BCVBS,NoInf=NoInfBS,SmallerBetter=TRUE)
     }
     # }}}
-    # {{{ output
-    out <- switch(Plan$internal.name,
-                  "noPlan"=list("BS"=AppBS),
-                  ## "plain"=list("BS"=BootBS,"AppBS"=AppBS),
+  # {{{ output
+    out <- switch(SplitMethod$internal.name,
+                  "noSplitMethod"=list("BS"=AppBS),
                   "boot632"=list("AppBS"=AppBS,"BootcvBS"=BCVBS,"BS"=B632BS),
-                  "boot632plus"=list("AppBS"=AppBS,
-                    "BootcvBS"=BCVBS,
-                    "NoInfBS"=NoInfBS,
-                    "weight"=R632PlusBS$weight,
-                    "overfit"=R632PlusBS$overfit,
-                    "BS"=R632PlusBS$B632Plus),
+                  "boot632plus"=list("AppBS"=AppBS,"BootcvBS"=BCVBS,"NoInfBS"=NoInfBS,"weight"=R632PlusBS$weight,"overfit"=R632PlusBS$overfit,"BS"=R632PlusBS$B632Plus),
                   "bootcv"=list("AppBS"=AppBS,"BS"=BCVBS),
                   "noinf"=list("AppBS"=AppBS,"PredBS"=NoInfBS))
-    if (keepCrossValRes==TRUE && Plan$internal.name!="noPlan"){
-      ##       if (Plan$internal.name=="plain")
-      ##         out <- c(out,"BootBSMat"=BootBSMat)
-      ##       else
-      if (Plan$internal.name!="noinf")
+    if (keepCrossValRes==TRUE && SplitMethod$internal.name!="noSplitMethod"){
+      if (SplitMethod$internal.name!="noinf")
         out <- c(out,list("BootcvBSList"=BootcvBSList))
     }
     if (!is.null(extract)) out <- c(out,list("fitParms"=fitParms))
@@ -262,7 +258,7 @@ Brier.list <- function(object,
   out <- c(out,
            list(call=match.call(),
                 models=outmodels,
-                method=Plan))
+                method=SplitMethod))
   if (verbose==TRUE) cat("\n")
   ##   bs <- Brier(Y,P,N)$pred.error
   ##   pNull <- sum(Y)/N

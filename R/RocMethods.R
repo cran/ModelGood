@@ -22,6 +22,7 @@ Roc.default <- function(object,
   Disease <- as.integer(as.character(factor(y,labels=c("0","1"))))
   count.DiseasePos <- sum(Disease==1)
   count.DiseaseNeg <- sum(Disease==0)
+  ## print(breaks)
   if (missing(breaks))
     breaks <- sort(unique(object))
   else
@@ -89,7 +90,7 @@ Roc.default <- function(object,
 
 Roc.formula <- function(object,formula,data,crRatio=1,...){
   call <- match.call()
-  m <- match.call(expand = FALSE)
+  m <- match.call(expand.dots = FALSE)
   m <- m[match(c("","formula","data","subset","na.action"), names(m), nomatch = 0)]
   if (missing(data)) Terms <- terms(formula)
   else Terms <- terms(formula,data=data)
@@ -158,7 +159,7 @@ avRoc <- function(list,grid,method="vertical"){
 Roc.list <- function(object,
                      formula,
                      data,
-                     plan="noPlan",
+                     splitMethod="noSplitMethod",
                      noinf.method=c("simulate"),
                      simulate="reeval",
                      B,
@@ -178,23 +179,27 @@ Roc.list <- function(object,
                      ...){
 
 # }}}
+theCall=match.call()
+if (match("replan",names(theCall),nomatch=FALSE))
+  stop("Argument name 'replan' has been replaced by 'splitMethod'.")
+  
 # {{{ models
   NF <- length(object) 
   if (is.null(names(object)))names(object) <- sapply(object,function(o)class(o)[1])
   else{names(object)[(names(object)=="")] <- sapply(object[(names(object)=="")],function(o)class(o)[1])}
+  object.names = names(object)
   names(object) <- make.names(names(object),unique=TRUE)
 
-  # }}}
+# }}}
 # {{{ formula
-  if (missing(formula)){
-    formula <- eval(object[[1]]$call$formula)
-    if (class(formula)!="formula")
-      stop("Argument formula is missing.")
-    else
-      if (verbose)
-        warning("Argument formula is missing. I use the formula from the call to the first model instead.")
-  }
-
+if (missing(formula)){
+  formula <- eval(object[[1]]$call$formula)
+  if (class(formula)!="formula")
+    stop("Argument formula is missing.")
+  else
+    if (verbose)
+      warning("Argument formula is missing. I use the formula from the call to the first model instead.")
+}
   # }}}
 # {{{ data
   if (missing(data)){
@@ -221,16 +226,15 @@ Roc.list <- function(object,
   # }}}
 # {{{ break points for the ROC
   if (missing(breaks))
-  breaks <- seq(0,1,.01)
-  
-# }}}
-# {{{ Plan
+    breaks <- seq(0,1,.01)
+  # }}}
+# {{{ SplitMethod
 
-  Plan <- MgPlans(plan=plan,B=B,N=N,M=M,k=k)
-  B <- Plan$B
-  CrossvalIndex <- Plan$index
-  if (!keepSampleIndex) Plan$index <- NULL
-  k <- Plan$k
+  SplitMethod <- MgSplitMethods(splitMethod=splitMethod,B=B,N=N,M=M,k=k)
+  B <- SplitMethod$B
+  CrossvalIndex <- SplitMethod$index
+  if (!keepSampleIndex) SplitMethod$index <- NULL
+  k <- SplitMethod$k
   do.crossval <- !(is.null(CrossvalIndex))
   if (missing(keepCrossValRes)) keepCrossValRes <- do.crossval
   if (missing(keepNoInfSimu)) keepNoInfSimu <- FALSE
@@ -238,16 +242,13 @@ Roc.list <- function(object,
   # }}}
 # {{{ checking the models for compatibility with cross-validation
   if (do.crossval){
-    cm <- MgCheck(object=object,model.args=model.args,model.parms=model.parms,Plan=Plan,verbose=verbose)
+    cm <- MgCheck(object=object,model.args=model.args,model.parms=model.parms,SplitMethod=SplitMethod,verbose=verbose)
     model.args <- cm$model.args
     model.parms <- cm$model.parms
   }
-
   # }}}
 # {{{ computation of ROC curves in a loop over the models 
-  
   list.out <- lapply(1:NF,function(f){
-   
     if (verbose && NF>1) message("\n",names(object)[f],"\n")
     fit <- object[[f]]
     extract <- model.parms[[f]]
@@ -259,30 +260,29 @@ Roc.list <- function(object,
     AppRoc <- Roc.default(object=pred,y=Y,breaks=breaks,crRatio=crRatio)
     AppAuc <- Auc.default(object=AppRoc$Sensitivity,Spec=AppRoc$Specificity)
     AppBS <- Brier.default(object=pred,y=Y,crRatio=crRatio)
-
-  # }}}
-# {{{ No information error  
-
-    if (Plan$internal.name %in% c("boot632plus","noinf")){
+    
+    # }}}
+    # {{{ No information error  
+    if (SplitMethod$internal.name %in% c("boot632plus","noinf")){
       if (noinf.method=="simulate"){
         if (verbose)
           cat("\nSimulate no information performance\n")
-        compute.NoInfRocList <- lapply(1:B,function(b){
-          if (verbose) MgTalk(b,B)
-          data.b <- data
+        compute.NoInfRocList <- lapply(1:B,function(runb){
+          if (verbose) MgTalk(runb,B)
+          data.index <- data
           ## permute the response variable
           responseName <- all.vars(formula)[1]
-          data.b[,responseName] <- sample(factor(Y),replace=FALSE)
+          data.index[,responseName] <- sample(factor(Y),replace=FALSE)
           if (simulate=="reeval")
-            fit.b <- MgRefit(object=fit,data=data.b,step=b,silent=na.accept>0,verbose=verbose)
+            fit.index <- MgRefit(object=fit,data=data.index,step=runb,silent=na.accept>0,verbose=verbose)
           ## evaluate the model in data with reeallocated responses
           else
-            fit.b <- fit
-          pred.b <- do.call("predictStatusProb",
-                            c(list(object=fit.b,newdata=data.b),
-                              model.args[[f]]))
-          innerNoInfRoc <- Roc.default(object=pred.b,y=data.b[,responseName],breaks=breaks,crRatio=crRatio)
-          innerNoInfBS <- Brier.default(object=pred.b,y=data.b[,responseName],crRatio=crRatio)
+            fit.index <- fit
+          pred.index <- do.call("predictStatusProb",
+                                c(list(object=fit.index,newdata=data.index),
+                                  model.args[[f]]))
+          innerNoInfRoc <- Roc.default(object=pred.index,y=data.index[,responseName],breaks=breaks,crRatio=crRatio)
+          innerNoInfBS <- Brier.default(object=pred.index,y=data.index[,responseName],crRatio=crRatio)
           list("innerNoInfRoc"=innerNoInfRoc,"innerNoInfBS"=innerNoInfBS)
         })
         if (verbose) cat("\n")
@@ -297,47 +297,53 @@ Roc.list <- function(object,
         NoInfBS <- .C("brier_noinf",bs=double(1),as.double(Y),as.double(pred),as.integer(N),NAOK=TRUE,PACKAGE="ModelGood")$bs
       }
     }
-    if (Plan$internal.name %in% c("boot632plus","bootcv","boot632")){
-
+    if (SplitMethod$internal.name %in% c("boot632plus","bootcv","boot632")){
       # }}}
       # {{{ Bootcv aka BootstrapCrossValidation
       if (verbose)
         cat("\nBootstrap cross-validation performance\n")
-      compute.BootcvRocList <- lapply(1:B,function(b){
-        if (verbose) MgTalk(b,B)
-        vindex.b <- match(1:N,CrossvalIndex[,b],nomatch=0)==0
-        val.b <- data[vindex.b,,drop=FALSE]
-        train.b <- data[CrossvalIndex[,b],,drop=FALSE]
-        fit.b <- MgRefit(object=fit,data=train.b,step=b,silent=na.accept>0,verbose=verbose)
+      compute.step <- function(runb){
+        if (verbose) MgTalk(runb,B)
+        vindex.index <- match(1:N,CrossvalIndex[,runb],nomatch=0)==0
+        val.index <- data[vindex.index,,drop=FALSE]
+        train.index <- data[CrossvalIndex[,runb],,drop=FALSE]
+        fit.index <- MgRefit(object=fit,data=train.index,step=runb,silent=na.accept>0,verbose=verbose)
         if (!is.null(extract)) {
-          fit.parms.b <- fit.b[extract]
-          names(fit.parms.b) <- paste(extract,paste("sample",b,sep="."),sep=":")
+          fit.parms.index <- fit.index[extract]
+          names(fit.parms.index) <- paste(extract,paste("sample",runb,sep="."),sep=":")
         }
-        else fit.parms.b <- NULL
-        if (is.null(fit.b)){
+        else fit.parms.index <- NULL
+        if (is.null(fit.index)){
           failed <- "fit"
           innerBootcvRoc <- list(Sensitivity=NA,Specificity=NA)
           innerBCVBS <- NA
         }
         else{
-          try2predict <- try(pred.b <- do.call("predictStatusProb",c(list(object=fit.b,newdata=val.b),model.args[[f]])),silent=na.accept>0)
+          try2predict <- try(pred.index <- do.call("predictStatusProb",c(list(object=fit.index,newdata=val.index),model.args[[f]])),silent=na.accept>0)
           if (inherits(try2predict,"try-error")==TRUE){
-            if (verbose) warning(paste("During bootstrapping: prediction for model ",class(fit.b)," failed in step ",b),immediate.=TRUE)
+            if (verbose) warning(paste("During bootstrapping: prediction for model ",class(fit.index)," failed in step ",runb),immediate.=TRUE)
             failed <- "prediction"
             innerBootcvRoc <- list(Sensitivity=NA,Specificity=NA)
             innerBCVBS <- NA
           }
           else{
             failed <- NA
-            innerBootcvRoc <- Roc.default(y=Y[vindex.b],pred.b,breaks=breaks,crRatio=crRatio)
-            innerBCVBS <- Brier.default(object=pred.b,y=Y[vindex.b],crRatio=crRatio)
+            innerBootcvRoc <- Roc.default(y=Y[vindex.index],pred.index,breaks=breaks,crRatio=crRatio)
+            innerBCVBS <- Brier.default(object=pred.index,y=Y[vindex.index],crRatio=crRatio)
           }
         }
         list("innerBootcvRoc"=innerBootcvRoc,
-             "fit.parms"=fit.parms.b,
+             "fit.parms"=fit.parms.index,
              "failed"=failed,
              "innerBCVBS"=innerBCVBS)
-      })
+      }
+      ## if (require(foreach)){
+      b <- 1
+      compute.BootcvRocList <- foreach (b = 1:B) %dopar% compute.step(runb=b)
+      ## }
+      ## else{
+      ## compute.BootcvRocList <- lapply(1:B,compute.step)
+      ## }
       if (verbose) cat("\n")
       if (!is.null(extract)) fitParms <- sapply(compute.BootcvRocList,function(x)x$fit.parms)
       failed <- na.omit(sapply(compute.BootcvRocList,function(x)x$failed))
@@ -352,7 +358,7 @@ Roc.list <- function(object,
 # }}}
 # {{{ Bootstrap .632
 
-    if (Plan$internal.name=="boot632"){
+    if (SplitMethod$internal.name=="boot632"){
       B632Roc <- list(Sensitivity=.368 * AppRoc$Sensitivity + .632 * BCVSens,
                       Specificity=.368 * AppRoc$Specificity + .632 * BCVSpec)
       B632BS <- .368 * AppBS + .632 * BCVBS
@@ -360,7 +366,7 @@ Roc.list <- function(object,
     }
   # }}}
 # {{{ Bootstrap .632+
-    if (Plan$internal.name=="boot632plus"){
+    if (SplitMethod$internal.name=="boot632plus"){
       ## first we have to prepare the averaging
       if (RocAverageMethod=="vertical"){
         AppSens <- c(approx(AppRoc$Sensitivity,AppRoc$Specificity,xout=RocAverageGrid,yleft=0,yright=1,ties=median)$y,0)
@@ -383,8 +389,8 @@ Roc.list <- function(object,
     }
     # }}}
 # {{{ preparing the output
-    out <- switch(Plan$internal.name,
-                  "noPlan"=list("Roc"=AppRoc),
+    out <- switch(SplitMethod$internal.name,
+                  "noSplitMethod"=list("Roc"=AppRoc),
                   ## "plain"=list("Roc"=BootRoc,"AppRoc"=AppRoc),
                   "boot632"=list("Roc"=B632Roc,"AppRoc"=AppRoc,"BootcvRoc"=BootcvRoc),
                   "boot632plus"=list("Roc"=B632plusRoc,
@@ -396,8 +402,8 @@ Roc.list <- function(object,
                   "bootcv"=list("Roc"=BootcvRoc,"AppRoc"=AppRoc),
                   "noinf"=list("AppRoc"=AppRoc,"NoInfRoc"=NoInfRoc))
     
-    out$Auc <- switch(Plan$internal.name,
-                      "noPlan"=list("Auc"=AppAuc),
+    out$Auc <- switch(SplitMethod$internal.name,
+                      "noSplitMethod"=list("Auc"=AppAuc),
                       ## "plain"=list("Auc"=BootAuc,"AppAuc"=AppAuc),
                       "boot632"= list("Auc"=B632Auc,"AppAuc"=AppAuc,"AucBCV"=BCVAuc),
                       "boot632plus"=list("Auc"=B632PlusAuc$B632Plus,
@@ -408,8 +414,8 @@ Roc.list <- function(object,
                         "overfit"=B632PlusAuc$overfit),
                       "bootcv"=list("Auc"=BCVAuc,"AppAuc"=AppAuc),
                       "noinf"=list("NoInfAuc"=NoInfAuc,"AppAuc"=AppAuc))
-    out$Brier <- switch(Plan$internal.name,
-                        "noPlan"=list("BS"=AppBS),
+    out$Brier <- switch(SplitMethod$internal.name,
+                        "noSplitMethod"=list("BS"=AppBS),
                         ## "plain"=list("BS"=BootBS,"AppBS"=AppBS),
                         "boot632"= list("BS"=B632BS,"AppBS"=AppBS,"BSBCV"=BCVBS),
                         "boot632plus"=list("BS"=B632PlusBS$B632Plus,
@@ -421,14 +427,14 @@ Roc.list <- function(object,
                         "bootcv"=list("BS"=BCVBS,"AppBS"=AppBS),
                         "noinf"=list("AppBS"=AppBS,"NoInfBS"=NoInfBS))
 
-    ##     if (keepCrossValRes==TRUE && Plan$internal.name!="noPlan"){
+    ##     if (keepCrossValRes==TRUE && SplitMethod$internal.name!="noSplitMethod"){
     
     if (keepCrossValRes==TRUE && class(try(is.null(BootcvRocList),silent=TRUE))!="try-error"){
-      if (Plan$internal.name!="noinf")
+      if (SplitMethod$internal.name!="noinf")
         out <- c(out,list("BootcvRocList"=BootcvRocList))
     }
-    if (keepNoInfSimu==TRUE && Plan$internal.name!="noPlan"){
-      if (Plan$internal.name!="noinf")
+    if (keepNoInfSimu==TRUE && SplitMethod$internal.name!="noSplitMethod"){
+      if (SplitMethod$internal.name!="noinf")
         out <- c(out,list("NoInfRocList"=NoInfRocList))
     }
     if (!is.null(extract)) out <- c(out,list("fitParms"=fitParms))
@@ -461,11 +467,12 @@ Roc.list <- function(object,
            list(call=match.call(),
                 Response=Y,
                 models=outmodels,
-                method=Plan,
+                model.names=object.names,
+                method=SplitMethod,
                 breaks=breaks,crRatio=crRatio))
   if (verbose) cat("\n")
   # }}}
-  class(out) <- "Roc"
-  out
+class(out) <- "Roc"
+out
 }
 

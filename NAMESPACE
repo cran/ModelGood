@@ -1,13 +1,23 @@
 useDynLib(ModelGood)
 export("Roc",
        "Brier",
+       ## "FastBw",
+       ## "ConfScore",
+       ## "calibrationPlot",
        "predictStatusProb")
 
+import(rms,Hmisc,prodlim,foreach)
+
 S3method(print,Brier)
+S3method(summary,Brier)
+
+S3method(print,confScore)
+S3method(summary,confScore)
+S3method(plot,confScore)
+
 S3method(print,Roc)
 S3method(plot,Roc)
 S3method(lines,Roc)
-S3method(summary,Brier)
 S3method(summary,Roc)
 
 S3method(Brier,list)
@@ -23,6 +33,7 @@ S3method(Roc,lrm)
 S3method(Roc,rpart)
 
 S3method(predictStatusProb,randomForest)
+S3method(predictStatusProb,FastBw)
 S3method(predictStatusProb,glm)
 S3method(predictStatusProb,lrm)
 S3method(predictStatusProb,rpart)

@@ -4,7 +4,7 @@ void brier_noinf(double *bs,
 		 int *N)
 {
   int i, j;
-  double p, y, brier;
+  double p, y, brier=0;
   
   for (j=0; j<*N; j++){
     p = pred[j];    /* prediction */

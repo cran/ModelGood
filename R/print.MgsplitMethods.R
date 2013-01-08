@@ -1,5 +1,5 @@
-print.MgPlans <- function(x){
-  cat("\nCross-Validation plan:",x$name,"\n")
+print.MgSplitMethods <- function(x){
+  cat("\nCross-Validation splitMethod:",x$name,"\n")
   if (x$internal.name=="crossval")
     cat("Repeat: ",x$B,"\n")
   else{

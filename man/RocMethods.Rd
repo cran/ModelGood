@@ -1,4 +1,4 @@
-\name{Roc/Brier score}
+\name{RocBrierScore}
 \alias{Brier}
 \alias{Brier.list}
 \alias{Brier.glm}
@@ -30,7 +30,7 @@ Roc(object,...)
 \method{Roc}{list}(object,
                      formula,
                      data,
-                     plan="noPlan",
+                     splitMethod="noSplitMethod",
                      noinf.method=c("simulate"),
                      simulate="reeval",
                      B,
@@ -52,7 +52,7 @@ Brier(object,...)
 \method{Brier}{list}(object,
                      formula,
                      data,
-                     plan="noPlan",
+                     splitMethod="noSplitMethod",
                      noinf.method=c("simulate"),
                      simulate="reeval",
                      crRatio=1,
@@ -81,7 +81,7 @@ Brier(object,...)
   \item{object}{A named list of prediction models. Each entry
     is either an R-object for which a \link{predictStatusProb}
     method exists (see details) or a \code{call} that can be evaluated to such an R-object.
-    For cross-validation (e.g. when \code{plan} is "boot632plus")
+    For cross-validation (e.g. when \code{splitMethod} is "boot632plus")
     all the models in this list must include their \code{call} in their
     value.
   }
@@ -94,7 +94,7 @@ Brier(object,...)
   \item{data}{A data frame to validate the prediction models
     If missing, use the data of the (first) model in object.
   }
-  \item{plan}{Method for estimating the generalization error.
+  \item{splitMethod}{Method for estimating the generalization error.
 
     \code{none}:Assess the models in the same data where they are
       fitted. Yields the apparent or re-substitution performance. Often
@@ -121,11 +121,11 @@ Brier(object,...)
     curve.}
   \item{simulate}{If equal to \code{"reeval"} then the models are re-evaluated in the current
    permuted data for computing the no-information Roc curve.}
-  \item{B}{Number of bootstrap samples. The default depends on argument \code{plan}.
-    When \code{plan in c("Bootcv","Boot632","Boot632plus"} the
-    default is 100. For \code{plan="cvK"} \code{B} is the number of cross-validation cycles,
+  \item{B}{Number of bootstrap samples. The default depends on argument \code{splitMethod}.
+    When \code{splitMethod in c("Bootcv","Boot632","Boot632plus"} the
+    default is 100. For \code{splitMethod="cvK"} \code{B} is the number of cross-validation cycles,
     and -- default is 1.
-    For \code{plan="none"} \code{B} is the number of bootstrap
+    For \code{splitMethod="none"} \code{B} is the number of bootstrap
     simulations e.g. to obtain bootstrap confidence limits -- default is 0.}
   \item{M}{The size of the bootstrap samples for cross-validation without replacement.
   }
@@ -223,14 +223,14 @@ Brier(object,...)
   The object includes the following components:
   \item{Roc}{
     The Roc curve(s) estimated according to the
-    \code{plan}. A matrix where each column represents the
+    \code{splitMethod}. A matrix where each column represents the
     estimated prediction error of a fit at
     the time points in time.
   }
   \item{AppRoc}{
     The Roc curve(s) estimated when
     the model(s) are evaluated in the same data where
-    they were fitted. Only if \code{plan} is one of
+    they were fitted. Only if \code{splitMethod} is one of
     "NoInf", "Bootcv", "Boot632" or "Boot632plus", since otherwise
     \code{repla} is "apparent" and then this is 
      stored in \code{Roc} as explained above.
@@ -239,28 +239,28 @@ Brier(object,...)
     The prediction error when
     the model(s) are trained in the bootstrap sample and evaluated in
     the data that are not in the bootstrap sample.
-    Only if \code{plan} is one of
-    "Boot632" or "Boot632plus". When \code{plan="Bootcv"}
+    Only if \code{splitMethod} is one of
+    "Boot632" or "Boot632plus". When \code{splitMethod="Bootcv"}
     then the \code{BootcvRoc} is stored in the component \code{PredRoc}.
   }
   \item{NoInfRoc}{
     The prediction error when
     the model(s) are evaluated in the permuted data.
-    Only if \code{plan} is one of
+    Only if \code{splitMethod} is one of
     "Bootcv", "Boot632", or "Boot632plus".
-    For \code{plan="NoInf"}
+    For \code{splitMethod="NoInf"}
     the \code{NoInfRoc} is stored in the component \code{PredRoc}.
   }
   \item{weight}{
     The weight used to linear combine the \code{AppRoc} and the
     \code{BootcvRoc} 
-    Only if \code{plan} is one of
+    Only if \code{splitMethod} is one of
     "Boot632", or "Boot632plus".
   }
   \item{overfit}{
     Estimated \code{overfit} of the model(s).
     See references.
-    Only if \code{plan} is one of
+    Only if \code{splitMethod} is one of
     "Boot632", or "Boot632plus".
   }
   \item{call}{The call that produced the object} 
@@ -324,7 +324,7 @@ plot(Roc(list(lm1,lm2),data=dat,verbose=0,crRatio=1))
 library(randomForest)
 dat$Y=factor(dat$Y)
 rf <- randomForest(Y~X2,data=dat)
-rocCV=Roc(list(RandomForest=rf,LogisticRegression=lm2),data=dat,verbose=TRUE,plan="bootcv",B=10,crRatio=1)
+rocCV=Roc(list(RandomForest=rf,LogisticRegression=lm2),data=dat,verbose=TRUE,splitMethod="bootcv",B=10,crRatio=1)
 plot(rocCV,diag=TRUE)
 }
  }

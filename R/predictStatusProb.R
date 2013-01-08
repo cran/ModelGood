@@ -1,10 +1,20 @@
 predictStatusProb <- function(object,...){
   UseMethod("predictStatusProb",object)
 }
+
 predictStatusProb.numeric <- function(object,newdata,...){
   stopifnot(NROW(object)==NROW(newdata))
   object
 }
+predictStatusProb.double <- function(object,newdata,...){
+  stopifnot(NROW(object)==NROW(newdata))
+  object
+}
+
+## predictStatusProb.NULL <- function(object,newdata,...){
+## runif(NROW(newdata))
+## }
+
 predictStatusProb.glm <- function(object,newdata,...){
   if (object$family$family=="binomial")
     p <- predict(object,newdata=newdata,type="response")
@@ -28,6 +38,7 @@ predictStatusProb.rpart <- function(object,newdata,...){
   P <- as.numeric(predict(object,newdata=newdata,type="prob")[,2,drop=TRUE])
   P
 }
+
 
 
 predictStatusProb.randomForest <- function(object,newdata,...){

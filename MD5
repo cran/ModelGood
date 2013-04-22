@@ -1,4 +1,4 @@
-a70ec53103c8c24750af2972d2476941 *DESCRIPTION
+045f4a75fa02c37085fee36a79216e3c *DESCRIPTION
 0d529891f65649d3d8ac12b46ec3c253 *NAMESPACE
 f56e66ab139933f1d8ba1e34e334c73f *R/AucMethods.R
 e08818a2c9ada57953508fccd02e8f71 *R/BrierMethods.R
@@ -12,7 +12,7 @@ bb2f8df969f693624fe8ae59cd2d1b19 *R/MgCheck.R
 12e923c98253fc05ddd8c7efe76055a8 *R/MgSindex2.R
 3a3f821e7e326ba6936ab0b6219e4013 *R/MgTalk.R
 e20af759090f6f77800d1850871e4a99 *R/MgsplitMethods.R
-2c5eb9b6dabaa085cef323a4b92edc76 *R/RocMethods.R
+9fcddb2c62a7302ed526f0175ccfee2b *R/RocMethods.R
 1dacef7f63a3254ed3d7fecc69c5f5fb *R/Sensitivity.R
 b239c2e6d0b04e4ffcb2c53eeaf2d0bb *R/TPR.R
 313f31b9072aa7fefcde534edbbc777c *R/calibrationPlot.R
@@ -31,5 +31,5 @@ b0e3a3edde2414123a9c8b033e490154 *R/summary.Roc.R
 fb473e3d8a8ed080313a79a431b9c14c *man/RocMethods.Rd
 066da0053410da2c808187c11dd8bdbc *man/predictStatusProb.Rd
 c33f7b5885be3d57b8acc0a385dc9dc7 *oldNameSpace
-8e8aeb8c9dfc15f2dbd588b9e273e6f7 *src/MgSindex.c
+7a4145f21645c52445d5e898194ae23f *src/MgSindex.c
 14088957c86f76c072f6957d90a2946d *src/brier_score.c

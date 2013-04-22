@@ -302,6 +302,7 @@ if (missing(formula)){
       # {{{ Bootcv aka BootstrapCrossValidation
       if (verbose)
         cat("\nBootstrap cross-validation performance\n")
+
       compute.step <- function(runb){
         if (verbose) MgTalk(runb,B)
         vindex.index <- match(1:N,CrossvalIndex[,runb],nomatch=0)==0

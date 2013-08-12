@@ -167,24 +167,27 @@ Roc.list <- function(object,
                      breaks,
                      crRatio=1,
                      RocAverageMethod="vertical",
-                     RocAverageGrid=switch(RocAverageMethod,,"vertical"=seq(0,1,.01),"horizontal"=seq(1,0,-.01)),
+                     RocAverageGrid=switch(RocAverageMethod,
+                         "vertical"=seq(0,1,.01),
+                         "horizontal"=seq(1,0,-.01)),
                      model.args=NULL,
                      model.parms=NULL,
                      keepModels=FALSE,
                      keepSampleIndex=FALSE,
                      keepCrossValRes=FALSE,
                      keepNoInfSimu,
+                     slaveseed,
                      na.accept=0,
                      verbose=TRUE,
                      ...){
 
-# }}}
-theCall=match.call()
-if (match("replan",names(theCall),nomatch=FALSE))
-  stop("Argument name 'replan' has been replaced by 'splitMethod'.")
-  
-# {{{ models
-  NF <- length(object) 
+    # }}}
+    theCall=match.call()
+    if (match("replan",names(theCall),nomatch=FALSE))
+        stop("Argument name 'replan' has been replaced by 'splitMethod'.")
+    
+    # {{{ models
+    NF <- length(object) 
   if (is.null(names(object)))names(object) <- sapply(object,function(o)class(o)[1])
   else{names(object)[(names(object)=="")] <- sapply(object[(names(object)=="")],function(o)class(o)[1])}
   object.names = names(object)
@@ -239,6 +242,9 @@ if (missing(formula)){
   if (missing(keepCrossValRes)) keepCrossValRes <- do.crossval
   if (missing(keepNoInfSimu)) keepNoInfSimu <- FALSE
 
+    if (missing(slaveseed)||is.null(slaveseed))
+        slaveseed <- sample(1:1000000,size=B,replace=FALSE)
+
   # }}}
 # {{{ checking the models for compatibility with cross-validation
   if (do.crossval){
@@ -264,50 +270,54 @@ if (missing(formula)){
     # }}}
     # {{{ No information error  
     if (SplitMethod$internal.name %in% c("boot632plus","noinf")){
-      if (noinf.method=="simulate"){
-        if (verbose)
-          cat("\nSimulate no information performance\n")
-        compute.NoInfRocList <- lapply(1:B,function(runb){
-          if (verbose) MgTalk(runb,B)
-          data.index <- data
-          ## permute the response variable
-          responseName <- all.vars(formula)[1]
-          data.index[,responseName] <- sample(factor(Y),replace=FALSE)
-          if (simulate=="reeval")
-            fit.index <- MgRefit(object=fit,data=data.index,step=runb,silent=na.accept>0,verbose=verbose)
-          ## evaluate the model in data with reeallocated responses
-          else
-            fit.index <- fit
-          pred.index <- do.call("predictStatusProb",
-                                c(list(object=fit.index,newdata=data.index),
-                                  model.args[[f]]))
-          innerNoInfRoc <- Roc.default(object=pred.index,y=data.index[,responseName],breaks=breaks,crRatio=crRatio)
-          innerNoInfBS <- Brier.default(object=pred.index,y=data.index[,responseName],crRatio=crRatio)
-          list("innerNoInfRoc"=innerNoInfRoc,"innerNoInfBS"=innerNoInfBS)
-        })
-        if (verbose) cat("\n")
-        NoInfRocList <- lapply(compute.NoInfRocList,function(x)x$innerNoInfRoc)
-        NoInfRoc <- avRoc(list=NoInfRocList,grid=RocAverageGrid,method=RocAverageMethod)
-        NoInfBS <- mean(sapply(compute.NoInfRocList,function(x){x$innerNoInfBS}))
-        NoInfAuc <- mean(sapply(NoInfRocList,function(nil){Auc.default(object=nil$Sensitivity,nil$Specificity)}))
-      }
-      else{         
-        NoInfRoc <- list(Sensitivity=c(breaks,0),Specificity=c(1-breaks,1))
-        NoInfAuc <- 0.5
-        NoInfBS <- .C("brier_noinf",bs=double(1),as.double(Y),as.double(pred),as.integer(N),NAOK=TRUE,PACKAGE="ModelGood")$bs
-      }
+        if (noinf.method=="simulate"){
+            if (verbose)
+                cat("\nSimulate no information performance\n")
+            compute.NoInfRocList <- lapply(1:B,function(runb){
+                if (verbose) MgTalk(runb,B)
+                data.index <- data
+                ## permute the response variable
+                responseName <- all.vars(formula)[1]
+                data.index[,responseName] <- sample(factor(Y),replace=FALSE)
+                if (simulate=="reeval"){
+                    fit.index <- MgRefit(object=fit,data=data.index,step=runb,silent=na.accept>0,verbose=verbose)
+                }
+                ## evaluate the model in data with reeallocated responses
+                else
+                    fit.index <- fit
+                pred.index <- do.call("predictStatusProb",
+                                      c(list(object=fit.index,newdata=data.index),
+                                        model.args[[f]]))
+                innerNoInfRoc <- Roc.default(object=pred.index,y=data.index[,responseName],breaks=breaks,crRatio=crRatio)
+                innerNoInfBS <- Brier.default(object=pred.index,y=data.index[,responseName],crRatio=crRatio)
+                list("innerNoInfRoc"=innerNoInfRoc,"innerNoInfBS"=innerNoInfBS)
+            })
+            if (verbose) cat("\n")
+            NoInfRocList <- lapply(compute.NoInfRocList,function(x)x$innerNoInfRoc)
+            NoInfRoc <- avRoc(list=NoInfRocList,grid=RocAverageGrid,method=RocAverageMethod)
+            NoInfBS <- mean(sapply(compute.NoInfRocList,function(x){x$innerNoInfBS}))
+            NoInfAuc <- mean(sapply(NoInfRocList,function(nil){Auc.default(object=nil$Sensitivity,nil$Specificity)}))
+        }
+        else{         
+            NoInfRoc <- list(Sensitivity=c(breaks,0),Specificity=c(1-breaks,1))
+            NoInfAuc <- 0.5
+            NoInfBS <- .C("brier_noinf",bs=double(1),as.double(Y),as.double(pred),as.integer(N),NAOK=TRUE,PACKAGE="ModelGood")$bs
+        }
     }
     if (SplitMethod$internal.name %in% c("boot632plus","bootcv","boot632")){
-      # }}}
-      # {{{ Bootcv aka BootstrapCrossValidation
-      if (verbose)
-        cat("\nBootstrap cross-validation performance\n")
+        # }}}
+        # {{{ Bootcv aka BootstrapCrossValidation
+        if (verbose)
+            cat("\nBootstrap cross-validation performance\n")
 
-      compute.step <- function(runb){
+      compute.step <- function(runb,seed){
         if (verbose) MgTalk(runb,B)
         vindex.index <- match(1:N,CrossvalIndex[,runb],nomatch=0)==0
         val.index <- data[vindex.index,,drop=FALSE]
         train.index <- data[CrossvalIndex[,runb],,drop=FALSE]
+        if (!is.null(seed)) {
+          set.seed(seed)
+        }
         fit.index <- MgRefit(object=fit,data=train.index,step=runb,silent=na.accept>0,verbose=verbose)
         if (!is.null(extract)) {
           fit.parms.index <- fit.index[extract]
@@ -340,7 +350,7 @@ if (missing(formula)){
       }
       ## if (require(foreach)){
       b <- 1
-      compute.BootcvRocList <- foreach (b = 1:B) %dopar% compute.step(runb=b)
+      compute.BootcvRocList <- foreach (b = 1:B) %dopar% compute.step(runb=b,seed=slaveseed[[b]])
       ## }
       ## else{
       ## compute.BootcvRocList <- lapply(1:B,compute.step)

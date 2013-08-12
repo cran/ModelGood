@@ -38,13 +38,16 @@ Roc(object,...)
                      breaks,
                      crRatio=1,
                      RocAverageMethod="vertical",
-                     RocAverageGrid=switch(RocAverageMethod,,"vertical"=seq(0,1,.01),"horizontal"=seq(1,0,-.01)),
+                     RocAverageGrid=switch(RocAverageMethod,
+		       "vertical"=seq(0,1,.01),
+		       "horizontal"=seq(1,0,-.01)),
                      model.args=NULL,
                      model.parms=NULL,
                      keepModels=FALSE,
                      keepSampleIndex=FALSE,
                      keepCrossValRes=FALSE,
                      keepNoInfSimu,
+                     slaveseed,
                      na.accept=0,
                      verbose=TRUE,
                      ...)
@@ -169,6 +172,9 @@ Brier(object,...)
     Logical. If \code{TRUE} add the \code{B} results in permuted data
     (for no-information performance) to
      the output (see value). Defaults to \code{FALSE}.
+  }
+  \item{slaveseed}{
+    Vector of seeds, as long as \code{B}, to be given to the slaves in parallel computing.
   }
   \item{na.accept}{
     Works only for "Bootcv" estimate of performance.
@@ -324,7 +330,12 @@ plot(Roc(list(lm1,lm2),data=dat,verbose=0,crRatio=1))
 library(randomForest)
 dat$Y=factor(dat$Y)
 rf <- randomForest(Y~X2,data=dat)
-rocCV=Roc(list(RandomForest=rf,LogisticRegression=lm2),data=dat,verbose=TRUE,splitMethod="bootcv",B=10,crRatio=1)
+rocCV=Roc(list(RandomForest=rf,LogisticRegression=lm2),
+  data=dat,
+  verbose=TRUE,
+  splitMethod="bootcv",
+  B=10,
+  crRatio=1)
 plot(rocCV,diag=TRUE)
 }
  }

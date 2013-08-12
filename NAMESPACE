@@ -6,7 +6,8 @@ export("Roc",
        ## "calibrationPlot",
        "predictStatusProb")
 
-import(rms,Hmisc,prodlim,foreach)
+## import(rms,Hmisc,prodlim,foreach)
+import(rms,prodlim,foreach)
 
 S3method(print,Brier)
 S3method(summary,Brier)
@@ -33,6 +34,7 @@ S3method(Roc,lrm)
 S3method(Roc,rpart)
 
 S3method(predictStatusProb,randomForest)
+S3method(predictStatusProb,rfsrc)
 S3method(predictStatusProb,FastBw)
 S3method(predictStatusProb,glm)
 S3method(predictStatusProb,lrm)

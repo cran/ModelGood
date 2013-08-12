@@ -1,10 +1,12 @@
 # S3 wrapper function for party's ctree method
 # --------------------------------------------------------------------
 MGctree <- function(...){
- out <- list(ctree=ctree(...))
- class(out) <- "MGctree"
- out$call <- match.call()
- out  
+    ## require(party)
+    ctree <- party:::ctree
+    out <- list(ctree=ctree(...))
+    class(out) <- "MGctree"
+    out$call <- match.call()
+    out  
 }
 
 predictStatusProb.MGctree <- function (object, newdata, ...) {

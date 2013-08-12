@@ -1,18 +1,20 @@
 # {{{ UseMethod
 
 TPR <- function(x,...){
-  UseMethod("TPR",x)
+    UseMethod("TPR",x)
 }
 
 TPR.numeric <- function(x,...){
-  ci.tpr=binconf(x[4],(x[3]+x[4]),...)
-  colnames(ci.tpr)[1]="TPR (Sensitivity)"
-  ci.tpr
+    tmp <- binom.test(x[4],(x[3]+x[4]),...)
+    ci.tpr <- c(tmp$estimate,tmp$conf.int)
+    names(ci.tpr) <- c("TPR (Sensitivity)","Lower","Upper")
+    ci.tpr
 }
 
 TPR.table <- function(x,...){
-  ci.tpr=binconf(x[4],(x[3]+x[4]),...)
-  colnames(ci.tpr)[1]="TPR (Sensitivity)"
+  tmp <- binom.test(x[4],(x[3]+x[4]),...)
+  ci.tpr <- c(tmp$estimate,tmp$conf.int)
+  names(ci.tpr) <- c("TPR (Sensitivity)","Lower","Upper")
   ci.tpr
 }
 
@@ -20,10 +22,17 @@ TNR <- function(x,...){
   UseMethod("TNR",x)
 }
 
+TNR.numeric <- function(x,...){
+    tmp <- binom.test(x[1],(x[1]+x[2]),...)
+    ci.tnr <- c(tmp$estimate,tmp$conf.int)
+    names(ci.tnr) <- c("TPR (Specificity)","Lower","Upper")
+    ci.tnr
+}
 TNR.table <- function(x,...){
-  ci.tnr=binconf(x[1],(x[1]+x[2]),...)
-  colnames(ci.tnr)[1]="TNR (Specificity)"
-  ci.tnr
+    tmp <- binom.test(x[1],(x[1]+x[2]),...)
+    ci.tnr <- c(tmp$estimate,tmp$conf.int)
+    names(ci.tnr) <- c("TPR (Specificity)","Lower","Upper")
+    ci.tnr
 }
 
 # }}}

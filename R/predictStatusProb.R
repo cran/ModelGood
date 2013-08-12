@@ -6,6 +6,8 @@ predictStatusProb.numeric <- function(object,newdata,...){
   stopifnot(NROW(object)==NROW(newdata))
   object
 }
+
+
 predictStatusProb.double <- function(object,newdata,...){
   stopifnot(NROW(object)==NROW(newdata))
   object
@@ -24,6 +26,7 @@ predictStatusProb.glm <- function(object,newdata,...){
 }
 
 predictStatusProb.BinaryTree <- function(object,newdata,...){
+  treeresponse <- party:::treeresponse
   P <- sapply(treeresponse(object,newdata=newdata),function(x)x[1])
   P
 }
@@ -40,11 +43,15 @@ predictStatusProb.rpart <- function(object,newdata,...){
 }
 
 
-
 predictStatusProb.randomForest <- function(object,newdata,...){
   stopifnot(!missing(newdata))
   P <- as.numeric(predict(object,newdata=newdata,type="prob")[,2,drop=TRUE])
   P
+}
+
+predictStatusProb.rfsrc <- function(object, newdata, times, ...){
+  p <- predict(object,newdata=newdata,importance="none",...)$predicted[,2]
+  p
 }
 
 

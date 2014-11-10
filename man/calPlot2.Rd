@@ -2,14 +2,13 @@
 \alias{calPlot2}
 \title{Calibration plots for binary data}
 \usage{
-  calPlot2(object, formula, data, splitMethod = "none",
-    B = 1, M, showY, method = "nne", round = TRUE,
-    bandwidth = NULL, q = 10, density = 55, add = FALSE,
-    diag = !add, legend = !add, axes = !add, xlim, ylim,
-    xlab = "Predicted event probability",
-    ylab = "Observed proportion", col, lwd, lty, pch,
-    cause = 1, percent = TRUE, giveToModel = NULL,
-    na.action = na.fail, cores = 1, verbose = FALSE, ...)
+calPlot2(object, formula, data, splitMethod = "none", B = 1, M, showY,
+  method = "nne", round = TRUE, bandwidth = NULL, q = 10,
+  density = 55, add = FALSE, diag = !add, legend = !add, axes = !add,
+  xlim, ylim, xlab = "Predicted event probability",
+  ylab = "Observed proportion", col, lwd, lty, pch, cause = 1,
+  percent = TRUE, giveToModel = NULL, na.action = na.fail, cores = 1,
+  verbose = FALSE, ...)
 }
 \arguments{
   \item{object}{A named list of prediction models, where
@@ -128,17 +127,17 @@
   lines, legend. See \code{\link{SmartControl}}.}
 }
 \value{
-  list with elements: time, Frame and bandwidth (NULL for
-  method quantile).
+list with elements: time, Frame and bandwidth (NULL for
+method quantile).
 }
 \description{
-  Calibration plots for risk prediction models in for a
-  binary endpoint
+Calibration plots for risk prediction models in for a
+binary endpoint
 }
 \details{
-  For method "nne" the optimal bandwidth with respect to is
-  obtained with the function \code{\link{dpik}} from the
-  package \code{KernSmooth} for a box kernel function.
+For method "nne" the optimal bandwidth with respect to is
+obtained with the function \code{\link{dpik}} from the
+package \code{KernSmooth} for a box kernel function.
 }
 \examples{
 set.seed(40)
@@ -154,11 +153,11 @@ lm2 <- glm(Y~X2,data=dat,family="binomial")
 calPlot2(list(lm1,lm2),data=dat)
 }
 \author{
-  Thomas Alexander Gerds
+Thomas Alexander Gerds
 }
 \references{
-  TA Gerds, PA Andersen, and Kattan MW. Calibration plots
-  for risk prediction models in the presence of competing
-  risks. Statistics in Medicine, page to appear, 2014.
+TA Gerds, PA Andersen, and Kattan MW. Calibration plots for
+risk prediction models in the presence of competing risks.
+Statistics in Medicine, page to appear, 2014.
 }
 

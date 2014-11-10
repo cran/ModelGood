@@ -14,16 +14,13 @@
 \title{Comparing prediction models with Receiver operating characteristics and
 Brier scores}
 \usage{
-  \method{Roc}{list} (object, formula, data,
-    splitMethod='noSplitMethod',
-    noinf.method=c('simulate'), simulate='reeval', B, M,
-    breaks, cbRatio=1, RocAverageMethod='vertical',
-    RocAverageGrid=switch(RocAverageMethod,
-    'vertical'=seq(0,1,.01), 'horizontal'=seq(1,0,-.01)),
-    model.args=NULL, model.parms=NULL, keepModels=FALSE,
-    keepSampleIndex=FALSE, keepCrossValRes=FALSE,
-    keepNoInfSimu, slaveseed, cores=1, na.accept=0,
-    verbose=FALSE, ...)
+\method{Roc}{list} (object, formula, data, splitMethod='noSplitMethod',
+noinf.method=c('simulate'), simulate='reeval', B, M, breaks, cbRatio=1,
+RocAverageMethod='vertical',
+RocAverageGrid=switch(RocAverageMethod, 'vertical'=seq(0,1,.01),
+'horizontal'=seq(1,0,-.01)), model.args=NULL, model.parms=NULL,
+keepModels=FALSE, keepSampleIndex=FALSE, keepCrossValRes=FALSE,
+keepNoInfSimu, slaveseed, cores=1, na.accept=0, verbose=FALSE, ...)
 }
 \arguments{
   \item{object}{A named list of R objects that represent
@@ -176,90 +173,87 @@ Brier scores}
   \item{...}{Used to pass arguments to submodules.}
 }
 \value{
-  Object of class \code{Roc} or class \code{Brier}.
+Object of class \code{Roc} or class \code{Brier}.
 
-  Depending on the \code{splitMethod} the object includes
-  the following components:
+Depending on the \code{splitMethod} the object includes the
+following components:
 
-  \item{Roc, Brier, Auc}{A list of Roc curve(s), Brier
-  scores (BS), and areas under the curves (Auc), one for
-  each element of argument \code{object}, estimated
-  according to \code{splitMethod}.}
+\item{Roc, Brier, Auc}{A list of Roc curve(s), Brier scores
+(BS), and areas under the curves (Auc), one for each
+element of argument \code{object}, estimated according to
+\code{splitMethod}.}
 
-  \item{weight}{The weight used to linear combine the
-  \code{AppRoc} and the \code{BootcvRoc} Only available if
-  \code{splitMethod} is one of 'Boot632', or 'Boot632plus'.
-  }
+\item{weight}{The weight used to linear combine the
+\code{AppRoc} and the \code{BootcvRoc} Only available if
+\code{splitMethod} is one of 'Boot632', or 'Boot632plus'. }
 
-  \item{overfit}{ Estimated \code{overfit} of the model(s).
-  Only if \code{splitMethod} is one of 'Boot632', or
-  'Boot632plus'.  }
+\item{overfit}{ Estimated \code{overfit} of the model(s).
+Only if \code{splitMethod} is one of 'Boot632', or
+'Boot632plus'.  }
 
-  \item{call}{The call that produced the object}
+\item{call}{The call that produced the object}
 
-  \item{models}{See keepModels}
+\item{models}{See keepModels}
 
-  \item{method}{Summary of the splitMethod used.}
+\item{method}{Summary of the splitMethod used.}
 }
 \description{
-  Evaluation of the performance of risk prediction models
-  with binary status response variable (case/control or
-  similar). Roc curves are either based on a single
-  continuous marker, or on the probability prediction of an
-  event. Probability predictions are extracted from a given
-  (statistical) model, such as logistic regression, or
-  algorithm, such as random forest. The area under the
-  curve and the Brier score is used to summarize and
-  compare the performance.
+Evaluation of the performance of risk prediction models
+with binary status response variable (case/control or
+similar). Roc curves are either based on a single
+continuous marker, or on the probability prediction of an
+event. Probability predictions are extracted from a given
+(statistical) model, such as logistic regression, or
+algorithm, such as random forest. The area under the curve
+and the Brier score is used to summarize and compare the
+performance.
 }
 \details{
-  All functions work on a list of models to ease
-  comparison.
+All functions work on a list of models to ease comparison.
 
-  Bootstrap-crossvalidation techniques are implemented to
-  estimate the generalization performance of the model(s),
-  i.e., the performance which can be expected in new
-  subjects.
+Bootstrap-crossvalidation techniques are implemented to
+estimate the generalization performance of the model(s),
+i.e., the performance which can be expected in new
+subjects.
 
-  By default, when crossvalidation is involved, the ROC
-  curve is approximated on a grid of either sensitivities
-  or specificities and not computed at all unique
-  changepoints of the crossvalidated ROC curves, see
-  Fawcett, T. (2006). The (density of the) grid can be
-  controlled with the argument: RocAverageGrid
+By default, when crossvalidation is involved, the ROC curve
+is approximated on a grid of either sensitivities or
+specificities and not computed at all unique changepoints
+of the crossvalidated ROC curves, see Fawcett, T. (2006).
+The (density of the) grid can be controlled with the
+argument: RocAverageGrid
 
-  Missing data in the response or in the marker/predicted
-  risk cause a failure.
+Missing data in the response or in the marker/predicted
+risk cause a failure.
 
-  For each R object which potentially can predict a
-  probability for an event, there should be a corresponding
-  \code{predictStatusProb} method:
+For each R object which potentially can predict a
+probability for an event, there should be a corresponding
+\code{predictStatusProb} method:
 
-  For example, to assess a prediction model which evaluates
-  to a \code{myclass} object one defines a function called
-  \code{predictStatusProb.myclass} with arguments
-  \code{object,newdata,...}. For example, the function
-  predictStatusProb.lrm looks like this:
+For example, to assess a prediction model which evaluates
+to a \code{myclass} object one defines a function called
+\code{predictStatusProb.myclass} with arguments
+\code{object,newdata,...}. For example, the function
+predictStatusProb.lrm looks like this:
 
-  predictStatusProb.lrm <- function(object,newdata,...){ p
-  <-
-  as.numeric(predict(object,newdata=newdata,type='fitted'))
-  class(p) <- 'predictStatusProb' p }
+predictStatusProb.lrm <- function(object,newdata,...){ p <-
+as.numeric(predict(object,newdata=newdata,type='fitted'))
+class(p) <- 'predictStatusProb' p }
 
-  Currently implemented are \code{predictStatusProb}
-  methods for the following R-functions: \describe{
-  \item{}{\code{numeric} (marker values are passed on)}
-  \item{}{\code{formula} (single predictor: extracted from
-  newdata and passed on, multiple predictors: projected to
-  score by logistic regression)} \item{}{\code{glm} (from
-  \code{library(stats)}} \item{}{\code{lrm} (from
-  \code{library(Design)}} \item{}{\code{rpart} (from
-  \code{library(rpart)})} \item{}{\code{BinaryTree} (from
-  \code{library(party)})} \item{}{\code{ElasticNet} (a
-  wrapper for glmnet from \code{library(glmnet)})}
-  \item{}{\code{randomForest} from
-  \code{library(randomForest)}} \item{}{\code{rfsrc} from
-  \code{library(randomForestSRC)}} }
+Currently implemented are \code{predictStatusProb} methods
+for the following R-functions: \describe{
+\item{}{\code{numeric} (marker values are passed on)}
+\item{}{\code{formula} (single predictor: extracted from
+newdata and passed on, multiple predictors: projected to
+score by logistic regression)} \item{}{\code{glm} (from
+\code{library(stats)}} \item{}{\code{lrm} (from
+\code{library(Design)}} \item{}{\code{rpart} (from
+\code{library(rpart)})} \item{}{\code{BinaryTree} (from
+\code{library(party)})} \item{}{\code{ElasticNet} (a
+wrapper for glmnet from \code{library(glmnet)})}
+\item{}{\code{randomForest} from
+\code{library(randomForest)}} \item{}{\code{rfsrc} from
+\code{library(randomForestSRC)}} }
 }
 \examples{
 ## Generate some data with binary response Y
@@ -311,24 +305,23 @@ bs
 #'
 }
 \author{
-  Thomas Gerds \email{tag@biostat.ku.dk}
+Thomas Gerds \email{tag@biostat.ku.dk}
 }
 \references{
-  Fawcett, T. (2006). An introduction to ROC analysis.
-  Pattern Recognition Letters, 27, 861-874.
+Fawcett, T. (2006). An introduction to ROC analysis.
+Pattern Recognition Letters, 27, 861-874.
 
-  Gerds, Cai & Schumacher (2008). The Performance of Risk
-  Prediction Models. Biometrical Journal, Vol 50, 4,
-  457-479.
+Gerds, Cai & Schumacher (2008). The Performance of Risk
+Prediction Models. Biometrical Journal, Vol 50, 4, 457-479.
 
-  Efron, Tibshirani (1997) Journal of the American
-  Statistical Association 92, 548--560 Improvement On
-  Cross-Validation: The .632+ Bootstrap Method.
+Efron, Tibshirani (1997) Journal of the American
+Statistical Association 92, 548--560 Improvement On
+Cross-Validation: The .632+ Bootstrap Method.
 
-  Wehberg, S and Schumacher, M (2004) A comparison of
-  nonparametric error rate estimation methods in
-  classification problems. Biometrical Journal, Vol 46,
-  35--47
+Wehberg, S and Schumacher, M (2004) A comparison of
+nonparametric error rate estimation methods in
+classification problems. Biometrical Journal, Vol 46,
+35--47
 }
 \keyword{models}
 

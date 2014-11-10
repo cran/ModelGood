@@ -2,8 +2,7 @@
 \alias{reclass}
 \title{Risk reclassification table}
 \usage{
-  reclass(list, newdata, cuts = seq(0, 100, 25),
-    digits = 1)
+reclass(list, newdata, cuts = seq(0, 100, 25), digits = 1)
 }
 \arguments{
   \item{list}{A list with two elements. Each element should
@@ -19,14 +18,14 @@
   risks}
 }
 \value{
-  reclassification table
+reclassification table
 }
 \description{
-  Tabulate grouped risks predicted by two different
-  methods, models, algorithms
+Tabulate grouped risks predicted by two different methods,
+models, algorithms
 }
 \details{
-  All risks are multiplied by 100 before
+All risks are multiplied by 100 before
 }
 \examples{
 set.seed(40)
@@ -50,9 +49,9 @@ print(rc2)
 plot(rc2)
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  predictStatusProb
+predictStatusProb
 }
 

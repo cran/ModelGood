@@ -2,8 +2,8 @@
 \alias{click.Roc}
 \title{Click on ROC curve}
 \usage{
-  click.Roc(object, pch = 19, label = TRUE, adj,
-    col = "orange", cex = 3, ...)
+click.Roc(object, pch = 19, label = TRUE, adj, col = "orange", cex = 3,
+  ...)
 }
 \arguments{
   \item{object}{An object obtained with function
@@ -23,16 +23,16 @@
   \item{...}{passed to \code{identify}}
 }
 \value{
-  the values at the tag
+the values at the tag
 }
 \description{
-  Show marker value sensitivity and specificity at mouse
-  point
+Show marker value sensitivity and specificity at mouse
+point
 }
 \details{
-  A tag is set on the ROC curve at the mouse click and
-  corresponding marker value, sensitivity and specificity
-  shown below the click-point.
+A tag is set on the ROC curve at the mouse click and
+corresponding marker value, sensitivity and specificity
+shown below the click-point.
 }
 \examples{
 \dontrun{
@@ -44,9 +44,9 @@ click.Roc(r)
  }
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  identify Roc
+identify Roc
 }
 

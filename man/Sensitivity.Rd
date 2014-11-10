@@ -6,7 +6,10 @@
 \alias{Specificity}
 \title{Compute sensitivity, specificity and predictive values}
 \usage{
-  Sensitivity(x, event, cutoff, comparison = ">=", ...)
+Sensitivity(x,event,cutoff,comparison=">=",...)
+       Specificity(x,event,cutoff,comparison=">=",...)
+       NPV(x,event,cutoff,comparison=">=",...)
+       PPV(x,event,cutoff,comparison=">=",...)
 }
 \arguments{
   \item{x}{Either a binary 0,1 variable, or a numeric
@@ -25,14 +28,14 @@
   \item{...}{passed on to \code{binom.test}}
 }
 \value{
-  list with Sensitivity, Specificity, NPV, PPV and
-  confidence interval
+list with Sensitivity, Specificity, NPV, PPV and confidence
+interval
 }
 \description{
-  Compute sensitivity, specificity and predictive values
+Compute sensitivity, specificity and predictive values
 }
 \details{
-  Confidence intervals are obtained with \code{binom.test}
+Confidence intervals are obtained with \code{binom.test}
 }
 \examples{
 set.seed(17)
@@ -46,9 +49,9 @@ NPV(x,y,0.3)
 Diagnose(x,y,0.3)
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  binom.test
+binom.test
 }
 

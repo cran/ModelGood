@@ -2,20 +2,20 @@
 \alias{Ctree}
 \title{S3 wrapper function for party's ctree method}
 \usage{
-  Ctree(...)
+Ctree(...)
 }
 \arguments{
   \item{...}{passed to \code{ctree}}
 }
 \value{
-  object of class Ctree which contains a ctree object
+object of class Ctree which contains a ctree object
 }
 \description{
-  S3 wrapper function for party's ctree method
+S3 wrapper function for party's ctree method
 }
 \details{
-  The ModelGood crossvalidation functionality works only
-  for S3 classes.
+The ModelGood crossvalidation functionality works only for
+S3 classes.
 }
 \examples{
 library(party)
@@ -27,9 +27,9 @@ plot(ct$ctree)
 predictStatusProb(ct,newdata=d[1:3,])
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  ctree
+ctree
 }
 

@@ -2,7 +2,7 @@
 \alias{ElasticNet}
 \title{Wrapper function for glmnet}
 \usage{
-  ElasticNet(formula, data, nfolds = 10, ...)
+ElasticNet(formula, data, nfolds = 10, ...)
 }
 \arguments{
   \item{formula}{Formula where the right hand side
@@ -18,15 +18,15 @@
   \item{...}{passed on to glmnet}
 }
 \value{
-  Object with class ElasticNet
+Object with class ElasticNet
 }
 \description{
-  Wrapper function for glmnet
+Wrapper function for glmnet
 }
 \details{
-  This function first calls \code{cv.glmnet} and then
-  evaluates glmnet at the hyper parameter which optimizes
-  the cross-validation criterion.
+This function first calls \code{cv.glmnet} and then
+evaluates glmnet at the hyper parameter which optimizes the
+cross-validation criterion.
 }
 \examples{
 # Generate some data with binary response Y
@@ -45,9 +45,9 @@ efit <- ElasticNet(Y~X1+X2+X3,data=dat,family="binomial",alpha=0.1)
 Brier(efit,verbose=FALSE)
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  predictStatusProb
+predictStatusProb
 }
 

@@ -2,12 +2,10 @@
 \alias{plot.Roc}
 \title{ROC curves for risk prediction models}
 \usage{
-  \method{plot}{Roc} (x, ylab = "Sensitivity",
-    xlab = "1-Specificity", models, type = "l",
-    shadow = FALSE, simu = FALSE, control, grid = FALSE,
-    diag = TRUE, box = FALSE, lwd = 2, lty, col,
-    add = FALSE, axes = TRUE, legend, auc, percent = TRUE,
-    ...)
+\method{plot}{Roc}(x, ylab = "Sensitivity", xlab = "1-Specificity", models,
+  type = "l", shadow = FALSE, simu = FALSE, control, grid = FALSE,
+  diag = TRUE, box = FALSE, lwd = 2, lty, col, add = FALSE,
+  axes = TRUE, legend, auc, percent = TRUE, ...)
 }
 \arguments{
   \item{x}{object obtained with \code{Roc}}
@@ -58,13 +56,13 @@
   \item{...}{Use for smart control of some plot elements.}
 }
 \value{
-  ROC curves
+ROC curves
 }
 \description{
-  ROC curves for risk prediction models
+ROC curves for risk prediction models
 }
 \details{
-  Multiple ROC curves are shown in one graph.
+Multiple ROC curves are shown in one graph.
 }
 \examples{
 # generate som data
@@ -109,9 +107,9 @@ rocCV=Roc(list(RandomForest=rf,ElasticNet=en,LogisticRegression=lm2),
 plot(rocCV,yaxis.las=2,legend.title="4 bootstrap-crossvalidation steps")
 }
 \author{
-  Thomas A. Gerds <tag@biostat.ku.dk>
+Thomas A. Gerds <tag@biostat.ku.dk>
 }
 \seealso{
-  Roc
+Roc
 }
 
